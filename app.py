@@ -1,10 +1,11 @@
-from flask import Flask
+from flask import Flask, render_template
 
 app = Flask(__name__)
 
 @app.route('/')
-def hello_world():
-    return 'האפליקציה שלי עובדת!'
+def home():
+    # הפונקציה הזו אומרת לפייתון לחפש את הקובץ index.html בתוך תיקיית templates
+    return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
