@@ -1,12 +1,20 @@
 from flask import Flask, render_template, request, jsonify
 import requests
 import urllib.parse
+import os
 
-app = Flask(__name__)
+# הגדרה שאומרת לפייתון לחפש את הקבצים בכל מקום בפרויקט
+app = Flask(__name__, template_folder='.', static_folder='.')
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    # בודק אם הקובץ נמצא בתיקיית templates או בעמוד הראשי
+    if os.path.exists('templates/index.html'):
+        return render_template('templates/index.html')
+    elif os.path.exists('index.html'):
+        return render_template('index.html')
+    else:
+        return "שגיאה: קובץ הממשק index.html לא נמצא בפרויקט שלך!", 404
 
 @app.route('/translate', methods=['POST'])
 def translate_chat():
@@ -18,14 +26,10 @@ def translate_chat():
         return jsonify({'error': 'No text provided'}), 400
         
     try:
-        # מקודד את הטקסט בעברית בצורה בטוחה כדי שלא יגרום לשגיאה 400
         encoded_text = urllib.parse.quote(text_to_translate)
-        
-        # שימוש בכתובת תרגום ישירה ויציבה
         url = f"https://translated.net{encoded_text}&langpair=he|{target_lang}"
         
         response = requests.get(url, timeout=10)
-        
         if response.status_code != 200:
             return jsonify({'translated_text': f"שגיאת שרת: {response.status_code}"})
             
@@ -43,4 +47,5 @@ def translate_chat():
         return jsonify({'translated_text': f"שגיאה בתקשורת: {str(e)}"})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # מפעיל אוטומטית על פורט פתוח ובטוח
+    app.run(debug=True, port=5005)
