@@ -1,30 +1,33 @@
 from flask import Flask, render_template, request, jsonify
-from googletrans import Translator
+import requests
 
 app = Flask(__name__)
-translator = Translator()
 
 @app.route('/')
 def home():
-    # מציג את מסך שיחת התרגום למשתמש
     return render_template('index.html')
 
 @app.route('/translate', methods=['POST'])
 def translate_chat():
     data = request.json
     text_to_translate = data.get('text', '')
-    target_lang = data.get('target_lang', 'en') # ברירת מחדל לאנגלית
+    target_lang = data.get('target_lang', 'en')
     
     if not text_to_translate:
         return jsonify({'error': 'No text provided'}), 400
         
     try:
-        # מבצע את התרגום האוטומטי
-        translated = translator.translate(text_to_translate, dest=target_lang)
+        # שימוש במנוע תרגום פתוח ויציב (MyMemory API) שאינו דורש הרשמה
+        url = f"https://translated.net{text_to_translate}&langpair=he|{target_lang}"
+        response = requests.get(url).json()
+        translated_text = response.get('responseData', {}).get('translatedText', '')
+        
+        if not translated_text:
+            translated_text = "שגיאה בקבלת התרגום. נסה שוב."
+            
         return jsonify({
             'original_text': text_to_translate,
-            'translated_text': translated.text,
-            'detected_lang': translated.src
+            'translated_text': translated_text
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
